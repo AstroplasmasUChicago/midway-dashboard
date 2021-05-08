@@ -154,7 +154,7 @@ def periodic_slurm_status(nosave=False):
     )
     print("Misc nodes: [%d] total." % len(nodes_misc))
 
-    if np.sum(parts[partName]["total_nodes"] for partName in partNames) != len(
+    if np.sum(np.fromiter((parts[partName]["total_nodes"] for partName in partNames), int)) != len(
         nodes_main
     ):
         print("WARNING: Node count mismatch.")

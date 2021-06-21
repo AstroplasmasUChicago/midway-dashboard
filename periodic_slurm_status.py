@@ -1,6 +1,8 @@
 """
 Non-science and other meta plots.
 """
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, DayLocator, HourLocator, WeekdayLocator
@@ -306,7 +308,7 @@ def periodic_slurm_status(nosave=False):
             load = 0.0
             if nodes[name]["cpu_load"] is not None:
                 load = float(nodes[name]["cpu_load"]) / (nodes[name]["cpus"] / nHyper)
-            ax.text(xmax + padx * 10, j, "%.1f%%" % load, color="#333333", **textOpts)
+            ax.text(xmax + padx * 10, j, "%.0f%%" % load, color="#333333", **textOpts)
 
             # node name
             ax.text(0.02, j, name.replace("freya", ""), color="#222222", **textOpts)
@@ -375,8 +377,12 @@ def periodic_slurm_status(nosave=False):
 
         sKn = 351
         sKo = 3
-        data_load1 = savgol_filter(data["cluster_load"][w], sKn, sKo)
-        data_load2 = savgol_filter(data["cpu_load_allocnodes_mean"][w], sKn, sKo)
+        try:
+            data_load1 = savgol_filter(data["cluster_load"][w], sKn, sKo)
+            data_load2 = savgol_filter(data["cpu_load_allocnodes_mean"][w], sKn, sKo)
+        except:
+            data_load1 = data["cluster_load"][w]
+            data_load2 = data["cpu_load_allocnodes_mean"][w]
 
         ax.plot_date(dates, data_load1, "-", label="cluster load")
         ax.plot_date(dates, data_load2, "-", label="<node load>")
@@ -436,7 +442,7 @@ def periodic_slurm_status(nosave=False):
         "FREYA Status",
         [0.994, 0.952],
         xycoords="figure fraction",
-        fontsize=48.0,
+        fontsize=45.0,
         horizontalalignment="right",
         verticalalignment="center",
     )
@@ -463,7 +469,7 @@ def periodic_slurm_status(nosave=False):
         nodesStr,
         [0.006, 0.98],
         xycoords="figure fraction",
-        fontsize=20.0,
+        fontsize=15.0,
         horizontalalignment="left",
         verticalalignment="center",
     )
@@ -471,7 +477,7 @@ def periodic_slurm_status(nosave=False):
         coresStr,
         [0.006, 0.943],
         xycoords="figure fraction",
-        fontsize=20.0,
+        fontsize=15.0,
         horizontalalignment="left",
         verticalalignment="center",
     )
@@ -479,13 +485,13 @@ def periodic_slurm_status(nosave=False):
         loadStr,
         [0.006, 0.906],
         xycoords="figure fraction",
-        fontsize=20.0,
+        fontsize=15.0,
         horizontalalignment="left",
         verticalalignment="center",
     )
     ax.annotate(
         jobsStr,
-        [0.645, 0.975],
+        [0.665, 0.975],
         xycoords="figure fraction",
         fontsize=14.0,
         horizontalalignment="right",
@@ -493,7 +499,7 @@ def periodic_slurm_status(nosave=False):
     )
     ax.annotate(
         jobsStr2,
-        [0.645, 0.948],
+        [0.665, 0.948],
         xycoords="figure fraction",
         fontsize=14.0,
         horizontalalignment="right",
@@ -521,9 +527,9 @@ def periodic_slurm_status(nosave=False):
         )
         ax.annotate(
             fsStr,
-            [0.837, 0.727 - i * 0.026],
+            [0.837, 0.757 - i * 0.026],
             xycoords="figure fraction",
-            fontsize=12.5,
+            fontsize=10.5,
             horizontalalignment="left",
             verticalalignment="center",
         )
@@ -531,3 +537,5 @@ def periodic_slurm_status(nosave=False):
     # save
     fig.savefig("freya_stat_1.png", dpi=100)  # 1890x920 pixels
     plt.close(fig)
+
+periodic_slurm_status()

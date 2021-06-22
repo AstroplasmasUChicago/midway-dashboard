@@ -43,7 +43,7 @@ def periodic_slurm_status(nosave=False):
 
     # config
     saveDataFile = "historical.hdf5"
-    partNames = ["p.24h", "p.gpu"]
+    partNames = ["p.24h", "p.gpu", "p.test", "p.gpu.ampere"]
     coresPerNode = 40
     cpusPerNode = 2
     nHyper = 1  # 2 to enable HTing accounting
@@ -337,30 +337,32 @@ def periodic_slurm_status(nosave=False):
     ylim = [50, 100]
     fontsize = 11
 
-    ax = fig.add_axes([0.838, 0.482, 0.154, 0.15])  # left,bottom,width,height
-    # ax.set_ylabel('CPU / Cluster Load [%]')
-    ax.set_ylim(ylim)
+    plot_last_week = False
+    if plot_last_week:
+        ax = fig.add_axes([0.838, 0.482, 0.154, 0.15])  # left,bottom,width,height
+        # ax.set_ylabel('CPU / Cluster Load [%]')
+        ax.set_ylim(ylim)
 
-    minTs = stats["req_time"] - 24 * 60 * 60 * numDays
-    w = np.where(data["timestamp"] > minTs)[0]
-    dates = [datetime.fromtimestamp(ts) for ts in data["timestamp"] if ts > minTs]
+        minTs = stats["req_time"] - 24 * 60 * 60 * numDays
+        w = np.where(data["timestamp"] > minTs)[0]
+        dates = [datetime.fromtimestamp(ts) for ts in data["timestamp"] if ts > minTs]
 
-    ax.plot_date(dates, data["cluster_load"][w], "-", label="cluster load")
-    ax.plot_date(dates, data["cpu_load_allocnodes_mean"][w], "-", label="<node load>")
-    ax.tick_params(axis="y", direction="in", pad=-30)
-    ax.yaxis.set_ticks(yticks)
-    ax.yaxis.set_ticklabels([str(yt) + "%" for yt in yticks])
-    # ax.xaxis.set_major_locator(HourLocator(byhour=[0]))
-    ax.xaxis.set_major_formatter(DateFormatter("%a"))  #%Hh
-    # ax.xaxis.set_minor_locator(HourLocator(byhour=[12]))
-    ax.legend(loc="lower right", fontsize=fontsize)
+        ax.plot_date(dates, data["cluster_load"][w], "-", label="cluster load")
+        ax.plot_date(dates, data["cpu_load_allocnodes_mean"][w], "-", label="<node load>")
+        ax.tick_params(axis="y", direction="in", pad=-30)
+        ax.yaxis.set_ticks(yticks)
+        ax.yaxis.set_ticklabels([str(yt) + "%" for yt in yticks])
+        # ax.xaxis.set_major_locator(HourLocator(byhour=[0]))
+        ax.xaxis.set_major_formatter(DateFormatter("%a"))  #%Hh
+        # ax.xaxis.set_minor_locator(HourLocator(byhour=[12]))
+        ax.legend(loc="lower right", fontsize=fontsize)
 
-    for item in (
-        [ax.title, ax.xaxis.label, ax.yaxis.label]
-        + ax.get_xticklabels()
-        + ax.get_yticklabels()
-    ):
-        item.set_fontsize(fontsize)
+        for item in (
+            [ax.title, ax.xaxis.label, ax.yaxis.label]
+            + ax.get_xticklabels()
+            + ax.get_yticklabels()
+        ):
+            item.set_fontsize(fontsize)
 
     # time series plot (6 months)
     if 1:
@@ -525,14 +527,16 @@ def periodic_slurm_status(nosave=False):
             .replace("freya_u", "/freya/u/    ")
             .replace("freya_ptmp", "/freya/ptmp/")
         )
-        ax.annotate(
-            fsStr,
-            [0.837, 0.757 - i * 0.026],
-            xycoords="figure fraction",
-            fontsize=10.5,
-            horizontalalignment="left",
-            verticalalignment="center",
-        )
+        plot_disk_usage = False
+        if plot_disk_usage:
+            ax.annotate(
+                fsStr,
+                [0.837, 0.757 - i * 0.026],
+                xycoords="figure fraction",
+                fontsize=10.5,
+                horizontalalignment="left",
+                verticalalignment="center",
+            )
 
     # save
     fig.savefig("freya_stat_1.png", dpi=100)  # 1890x920 pixels

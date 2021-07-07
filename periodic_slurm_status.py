@@ -2,7 +2,8 @@
 Non-science and other meta plots.
 """
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, DayLocator, HourLocator, WeekdayLocator
@@ -156,9 +157,9 @@ def periodic_slurm_status(nosave=False):
     )
     print("Misc nodes: [%d] total." % len(nodes_misc))
 
-    if np.sum(np.fromiter((parts[partName]["total_nodes"] for partName in partNames), int)) != len(
-        nodes_main
-    ):
+    if np.sum(
+        np.fromiter((parts[partName]["total_nodes"] for partName in partNames), int)
+    ) != len(nodes_main):
         print("WARNING: Node count mismatch.")
     if len(nodes_main) != n_nodes_idle + n_nodes_alloc + n_nodes_down:
         print("WARNING: Nodes not all accounted for.")
@@ -348,7 +349,9 @@ def periodic_slurm_status(nosave=False):
         dates = [datetime.fromtimestamp(ts) for ts in data["timestamp"] if ts > minTs]
 
         ax.plot_date(dates, data["cluster_load"][w], "-", label="cluster load")
-        ax.plot_date(dates, data["cpu_load_allocnodes_mean"][w], "-", label="<node load>")
+        ax.plot_date(
+            dates, data["cpu_load_allocnodes_mean"][w], "-", label="<node load>"
+        )
         ax.tick_params(axis="y", direction="in", pad=-30)
         ax.yaxis.set_ticks(yticks)
         ax.yaxis.set_ticklabels([str(yt) + "%" for yt in yticks])
@@ -510,6 +513,16 @@ def periodic_slurm_status(nosave=False):
     # if next_job_starting is not None:
     #    ax.annotate(nextJobsStr, [0.73, 0.906], xycoords='figure fraction', fontsize=20.0, horizontalalignment='right', verticalalignment='center')
 
+    # send errors to
+    text = "please send feedback to\ncernetic@mpa-garching.mpg.de"
+    ax.annotate(
+        text,
+        [0.67, 0.937],
+        xycoords="figure fraction",
+        fontsize=8,
+        horizontalalignment="left",
+        verticalalignment="center",
+    )
     # disk usage text
     df = (
         str(subprocess.check_output("df -h /virgo /freya/u /freya/ptmp", shell=True))
@@ -527,13 +540,14 @@ def periodic_slurm_status(nosave=False):
             .replace("freya_u", "/freya/u/    ")
             .replace("freya_ptmp", "/freya/ptmp/")
         )
-        plot_disk_usage = False
+
+        plot_disk_usage = True
         if plot_disk_usage:
             ax.annotate(
                 fsStr,
-                [0.837, 0.757 - i * 0.026],
+                [0.837, 0.757 - i * 0.021],
                 xycoords="figure fraction",
-                fontsize=10.5,
+                fontsize=8.5,
                 horizontalalignment="left",
                 verticalalignment="center",
             )
@@ -541,5 +555,6 @@ def periodic_slurm_status(nosave=False):
     # save
     fig.savefig("freya_stat_1.png", dpi=100)  # 1890x920 pixels
     plt.close(fig)
+
 
 periodic_slurm_status()

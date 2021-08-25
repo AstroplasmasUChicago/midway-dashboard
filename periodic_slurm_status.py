@@ -61,6 +61,7 @@ def periodic_slurm_status(nosave=False):
         "FAIL",
         "FAILING",
         "POWER_DOWN",
+        "IDLE+DRAIN",
         "UNKNOWN",
     ]
 
@@ -130,19 +131,19 @@ def periodic_slurm_status(nosave=False):
     for node in nodes_main:
         # idle?
         for state in idleStates:
-            if state in node["state"]:
+            if state == node["state"]:
                 nodes_idle.append(node)
                 continue
 
         # down for any reason?
         for state in downStates:
-            if state in node["state"]:
+            if state == node["state"]:
                 nodes_down.append(node)
                 continue
 
         # in use?
         for state in allocStates:
-            if state in node["state"]:
+            if state == node["state"]:
                 nodes_alloc.append(node)
                 continue
 

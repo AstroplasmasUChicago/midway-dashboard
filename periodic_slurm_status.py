@@ -62,6 +62,7 @@ def periodic_slurm_status(nosave=False):
         "FAILING",
         "POWER_DOWN",
         "IDLE+DRAIN",
+        "DOWN*+DRAIN",
         "UNKNOWN",
     ]
 
@@ -268,9 +269,9 @@ def periodic_slurm_status(nosave=False):
             color = "gray"
             if name in [n["name"] for n in nodes_down]:
                 color = "red"
-            if name in [n["name"] for n in nodes_alloc]:
+            elif name in [n["name"] for n in nodes_alloc]:
                 color = "green"
-            if name in [n["name"] for n in nodes_idle]:
+            elif name in [n["name"] for n in nodes_idle]:
                 color = "orange"
             ax.plot(0.14, j, "o", color=color, markersize=10.0)
             textOpts = {
@@ -288,6 +289,12 @@ def periodic_slurm_status(nosave=False):
             # entire node
             # ax.fill_between( [xmin,xmax], [j-0.5+pad,j-0.5+pad], [j+0.5-pad, j+0.5-pad], facecolor=color, alpha=0.2)
 
+            # load
+            load = 0.0
+            if nodes[name]["cpu_load"] is not None:
+                load = float(nodes[name]["cpu_load"]) / (nodes[name]["cpus"] / nHyper)
+            ax.text(xmax + padx * 10, j, "%.0f%%" % load, color="#333333", **textOpts)
+
             # individual cores
             for k in range(cpusPerNode):
                 if k == 0:
@@ -297,7 +304,7 @@ def periodic_slurm_status(nosave=False):
                     y0 = j + pad / 2
                     y1 = j + 0.5 - pad
 
-                for m in range(int(coresPerNode / cpusPerNode)):
+                for m in range(min(int(coresPerNode / cpusPerNode * load / 100), int(coresPerNode / cpusPerNode))):
                     ax.fill_between(
                         [xmin + m * dx + padx, xmin + (m + 1) * dx - padx],
                         [y0, y0],
@@ -305,12 +312,15 @@ def periodic_slurm_status(nosave=False):
                         facecolor=color,
                         alpha=0.3,
                     )
+                for m in range(min(int(coresPerNode / cpusPerNode * load / 100), int(coresPerNode / cpusPerNode)), int(coresPerNode / cpusPerNode)):
+                    ax.fill_between(
+                        [xmin + m * dx + padx, xmin + (m + 1) * dx - padx],
+                        [y0, y0],
+                        [y1, y1],
+                        facecolor='gray',
+                        alpha=0.3,
+                    )
 
-            # load
-            load = 0.0
-            if nodes[name]["cpu_load"] is not None:
-                load = float(nodes[name]["cpu_load"]) / (nodes[name]["cpus"] / nHyper)
-            ax.text(xmax + padx * 10, j, "%.0f%%" % load, color="#333333", **textOpts)
 
             # node name
             ax.text(0.02, j, name.replace("freya", ""), color="#222222", **textOpts)

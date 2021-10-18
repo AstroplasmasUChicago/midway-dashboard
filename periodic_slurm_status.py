@@ -13,7 +13,7 @@ from os.path import isfile
 
 
 def periodic_slurm_status(nosave=False):
-    """ Collect current statistics from the SLURM scheduler, save some data, make some plots. """
+    """Collect current statistics from the SLURM scheduler, save some data, make some plots."""
     import pyslurm
     import subprocess
     import os
@@ -200,7 +200,7 @@ def periodic_slurm_status(nosave=False):
     )
 
     # time series data file: create if it doesn't exist already
-    nSavePts = 100000
+    nSavePts = 10000000
     saveDataFields = [
         "cluster_load",
         "cpu_load_allocnodes_mean",
@@ -304,7 +304,12 @@ def periodic_slurm_status(nosave=False):
                     y0 = j + pad / 2
                     y1 = j + 0.5 - pad
 
-                for m in range(min(int(coresPerNode / cpusPerNode * load / 100), int(coresPerNode / cpusPerNode))):
+                for m in range(
+                    min(
+                        int(coresPerNode / cpusPerNode * load / 100),
+                        int(coresPerNode / cpusPerNode),
+                    )
+                ):
                     ax.fill_between(
                         [xmin + m * dx + padx, xmin + (m + 1) * dx - padx],
                         [y0, y0],
@@ -312,15 +317,20 @@ def periodic_slurm_status(nosave=False):
                         facecolor=color,
                         alpha=0.3,
                     )
-                for m in range(min(int(coresPerNode / cpusPerNode * load / 100), int(coresPerNode / cpusPerNode)), int(coresPerNode / cpusPerNode)):
+                for m in range(
+                    min(
+                        int(coresPerNode / cpusPerNode * load / 100),
+                        int(coresPerNode / cpusPerNode),
+                    ),
+                    int(coresPerNode / cpusPerNode),
+                ):
                     ax.fill_between(
                         [xmin + m * dx + padx, xmin + (m + 1) * dx - padx],
                         [y0, y0],
                         [y1, y1],
-                        facecolor='gray',
+                        facecolor="gray",
                         alpha=0.3,
                     )
-
 
             # node name
             ax.text(0.02, j, name.replace("freya", ""), color="#222222", **textOpts)

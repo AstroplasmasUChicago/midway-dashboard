@@ -578,4 +578,5 @@ def periodic_slurm_status(nosave=False):
     plt.close(fig)
 
 
-periodic_slurm_status()
+if __name__ == "__main__":
+    periodic_slurm_status()

@@ -236,11 +236,11 @@ def periodic_slurm_status(nosave=False):
             maxNodesPerRack = len(rackNodes)
 
     # start node figure
-    fig = plt.figure(figsize=(18.9, 9.2), tight_layout=False)
+    fig = plt.figure(figsize=(18.9, 9.2), tight_layout=False, dpi=250)
 
     for i, rackNum in enumerate(rackNumberList):
         rack = topo[rackPrefix + "%d" % (rackNum + 1)]
-        rackNodes = _expandNodeList(rack["nodes"])
+        rackNodes = _expandNodeList(rack["nodes"])[::-1]
         print(rack["name"], rack["level"], rack["nodes"], len(rackNodes))
 
         ax = fig.add_subplot(1, len(rackNumberList), i + 1)
@@ -472,10 +472,19 @@ def periodic_slurm_status(nosave=False):
         horizontalalignment="right",
         verticalalignment="center",
     )
-    # ax.annotate(timeStr, [0.988, 0.08], xycoords='figure fraction', fontsize=12.0, horizontalalignment='right', verticalalignment='center', color='green')
+    timeStrY = 0.62
+    ax.annotate(
+        timeStr,
+        [0.988, timeStrY + 0.025],
+        xycoords="figure fraction",
+        fontsize=12.0,
+        horizontalalignment="right",
+        verticalalignment="center",
+        color="green",
+    )
     ax.annotate(
         timeStr2,
-        [0.988, 0.055],
+        [0.988, timeStrY],
         xycoords="figure fraction",
         fontsize=12.0,
         horizontalalignment="right",
@@ -484,7 +493,7 @@ def periodic_slurm_status(nosave=False):
     )
     ax.annotate(
         timeStr3,
-        [0.988, 0.03],
+        [0.988, timeStrY - 0.015],
         xycoords="figure fraction",
         fontsize=12.0,
         horizontalalignment="right",
@@ -546,7 +555,7 @@ def periodic_slurm_status(nosave=False):
     )
     # disk usage text
     df = (
-        str(subprocess.check_output("df -h /virgo /freya/u /freya/ptmp", shell=True))
+        str(subprocess.check_output("df -h /freya/u /freya/ptmp", shell=True))
         .replace("b'", "")
         .strip()
         .split("\\n")
@@ -556,10 +565,8 @@ def periodic_slurm_status(nosave=False):
             continue
         fsStr = line.split("%")[0] + "%"
         fsStr = fsStr.replace("Size", "   Size")
-        fsStr = (
-            fsStr.replace("gpfsvirgo", "/virgo/          ")
-            .replace("freya_u", "/freya/u/    ")
-            .replace("freya_ptmp", "/freya/ptmp/")
+        fsStr = fsStr.replace("freya_u", "/freya/u/    ").replace(
+            "freya_ptmp", "/freya/ptmp/"
         )
 
         plot_disk_usage = True

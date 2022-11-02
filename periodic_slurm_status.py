@@ -4,21 +4,22 @@ Non-science and other meta plots.
 import matplotlib
 
 matplotlib.use("Agg")
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.dates import DateFormatter, DayLocator, HourLocator, WeekdayLocator
-from scipy.signal import savgol_filter
+import os
+import pwd
+import subprocess
 from datetime import datetime
-from os.path import isfile
+
+import h5py
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.dates import DateFormatter, DayLocator
+from scipy.signal import savgol_filter
+
+import pyslurm
 
 
 def periodic_slurm_status(nosave=False):
     """Collect current statistics from the SLURM scheduler, save some data, make some plots."""
-    import pyslurm
-    import subprocess
-    import os
-    import pwd
-    import h5py
 
     def _expandNodeList(nodeListStr):
         nodesRet = []

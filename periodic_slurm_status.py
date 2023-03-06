@@ -494,7 +494,7 @@ def periodic_slurm_status(nosave=False):
     )
     ax.annotate(
         timeStr3,
-        [0.988, timeStrY - 0.015],
+        [0.988, timeStrY - 0.018],
         xycoords="figure fraction",
         fontsize=12.0,
         horizontalalignment="right",

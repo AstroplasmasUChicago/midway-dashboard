@@ -264,6 +264,10 @@ def periodic_slurm_status(nosave=False):
             ax.plot([0, 0], [-1, len(rackNodes)], "-", lw=2.0, color="black")
             ax.plot([1, 1], [-1, len(rackNodes)], "-", lw=2.5, color="black")
 
+        # on 29-09-2023 freyator started causing issues
+        if "freyator" in rackNodes:
+            rackNodes.remove("freyator")
+
         # draw representation of each node
         for j, name in enumerate(rackNodes):
             # circle: color by status

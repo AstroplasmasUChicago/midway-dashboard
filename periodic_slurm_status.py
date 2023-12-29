@@ -4,6 +4,7 @@ Non-science and other meta plots.
 import matplotlib
 
 matplotlib.use("Agg")
+import argparse
 import os
 import pwd
 import subprocess
@@ -16,6 +17,17 @@ from matplotlib.dates import DateFormatter, DayLocator
 from scipy.signal import savgol_filter
 
 import pyslurm
+
+parser = argparse.ArgumentParser(
+    prog="Pyslurm Chart", description="Generate a plot of Freya cluster usage"
+)
+parser.add_argument(
+    "-n",
+    "--dry-run",
+    help="Don't save a file with the output.",
+    action="store_true",
+)
+args = parser.parse_args()
 
 
 def periodic_slurm_status(nosave=False):
@@ -237,7 +249,7 @@ def periodic_slurm_status(nosave=False):
             maxNodesPerRack = len(rackNodes)
 
     # start node figure
-    fig = plt.figure(figsize=(18.9, 9.2), tight_layout=False, dpi=250)
+    fig = plt.figure(figsize=(18.9, 9.2), tight_layout=False, dpi=350)
 
     for i, rackNum in enumerate(rackNumberList):
         rack = topo[rackPrefix + "%d" % (rackNum + 1)]
@@ -296,8 +308,13 @@ def periodic_slurm_status(nosave=False):
 
             # load
             load = 0.0
-            if nodes[name]["cpu_load"] is not None:
-                load = float(nodes[name]["cpu_load"]) / (nodes[name]["cpus"] / nHyper)
+            try:
+                if nodes[name]["cpu_load"] is not None:
+                    load = float(nodes[name]["cpu_load"]) / (
+                        nodes[name]["cpus"] / nHyper
+                    )
+            except KeyError:
+                print(f"node with {name=} does not exist")
             ax.text(xmax + padx * 10, j, "%.0f%%" % load, color="#333333", **textOpts)
 
             # individual cores
@@ -340,14 +357,21 @@ def periodic_slurm_status(nosave=False):
             # node name
             ax.text(0.02, j, name.replace("freya", ""), color="#222222", **textOpts)
 
-            if "cur_job_owner" in nodes[name]:
-                real_name = nodes[name]["cur_job_owner"]
-                real_name = (
-                    real_name[:16] + "..." if len(real_name) > 16 else real_name
-                )  # truncate
-                ax.text(
-                    xmax + 0.14 + padx * 10, j, real_name, color="#333333", **textOpts
-                )
+            try:
+                if "cur_job_owner" in nodes[name]:
+                    real_name = nodes[name]["cur_job_owner"]
+                    real_name = (
+                        real_name[:16] + "..." if len(real_name) > 16 else real_name
+                    )  # truncate
+                    ax.text(
+                        xmax + 0.14 + padx * 10,
+                        j,
+                        real_name,
+                        color="#333333",
+                        **textOpts,
+                    )
+            except KeyError:
+                print(f"node {name=} does not exist")
 
     fig.subplots_adjust(left=0.005, right=0.995, bottom=0.005, top=0.92, wspace=0.05)
 
@@ -360,8 +384,8 @@ def periodic_slurm_status(nosave=False):
 
     # time series plot (last week)
     numDays = 7
-    yticks = [60, 70, 80, 90]
-    ylim = [50, 100]
+    yticks = [80, 90, 100]
+    ylim = [75, 100]
     fontsize = 11
 
     plot_last_week = False
@@ -382,7 +406,7 @@ def periodic_slurm_status(nosave=False):
         ax.yaxis.set_ticks(yticks)
         ax.yaxis.set_ticklabels([str(yt) + "%" for yt in yticks])
         # ax.xaxis.set_major_locator(HourLocator(byhour=[0]))
-        ax.xaxis.set_major_formatter(DateFormatter("%a"))  #%Hh
+        ax.xaxis.set_major_formatter(DateFormatter("%a"))  # %Hh
         # ax.xaxis.set_minor_locator(HourLocator(byhour=[12]))
         ax.legend(loc="lower right", fontsize=fontsize)
 
@@ -591,4 +615,4 @@ def periodic_slurm_status(nosave=False):
 
 
 if __name__ == "__main__":
-    periodic_slurm_status()
+    periodic_slurm_status(nosave=args.dry_run)

@@ -51,7 +51,6 @@ cd ..
 - `./run_periodic.sh`: loop every ~290 seconds.
 - `./run_cron_5min.sh`: single cron-safe run (lock + logging).
 
-Output DB: `historical.sqlite`  
 Output image: `caslake_stat_1.png`  
 Cron log: `logs/cron_periodic_slurm_status.log`
 

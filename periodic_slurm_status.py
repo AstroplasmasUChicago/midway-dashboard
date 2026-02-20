@@ -9,7 +9,6 @@ import argparse
 import math
 import pwd
 import re
-import sqlite3
 import subprocess
 from datetime import datetime
 
@@ -24,13 +23,14 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "-n",
     "--dry-run",
-    help="Don't save a file with the output.",
+    help="Compatibility flag; historical data storage is disabled.",
     action="store_true",
 )
 
 
 def periodic_slurm_status(nosave=False):
-    """Collect current statistics from the SLURM scheduler, save some data, make some plots."""
+    """Collect current statistics from the SLURM scheduler and make plots."""
+    _ = nosave
 
     def _expandNodeList(nodeListStr):
         if not nodeListStr:
@@ -86,7 +86,6 @@ def periodic_slurm_status(nosave=False):
         return normalized
 
     # config
-    saveDataFile = "historical.sqlite"
     outputImage = "caslake_stat_1.png"
     partNames = ["caslake"]
     coresPerNode = 48
@@ -279,79 +278,6 @@ def periodic_slurm_status(nosave=False):
         % (cluster_load, cpu_load_allocnodes_mean, cpu_load_allnodes_mean)
     )
 
-    # time series data fields
-    saveDataFields = [
-        "cluster_load",
-        "cpu_load_allocnodes_mean",
-        "n_jobs_running",
-        "n_jobs_pending",
-        "n_nodes_down",
-        "n_nodes_idle",
-        "n_nodes_alloc",
-    ]
-
-    # time series data store/load (sqlite)
-    with sqlite3.connect(saveDataFile) as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS metrics (
-                timestamp INTEGER PRIMARY KEY,
-                cluster_load REAL NOT NULL,
-                cpu_load_allocnodes_mean REAL NOT NULL,
-                n_jobs_running INTEGER NOT NULL,
-                n_jobs_pending INTEGER NOT NULL,
-                n_nodes_down INTEGER NOT NULL,
-                n_nodes_idle INTEGER NOT NULL,
-                n_nodes_alloc INTEGER NOT NULL
-            )
-            """
-        )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_metrics_timestamp ON metrics(timestamp)"
-        )
-
-        if not nosave:
-            conn.execute(
-                """
-                INSERT OR REPLACE INTO metrics (
-                    timestamp,
-                    cluster_load,
-                    cpu_load_allocnodes_mean,
-                    n_jobs_running,
-                    n_jobs_pending,
-                    n_nodes_down,
-                    n_nodes_idle,
-                    n_nodes_alloc
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    int(stats["req_time"]),
-                    float(cluster_load),
-                    float(cpu_load_allocnodes_mean),
-                    int(n_jobs_running),
-                    int(n_jobs_pending),
-                    int(n_nodes_down),
-                    int(n_nodes_idle),
-                    int(n_nodes_alloc),
-                ),
-            )
-
-        rows = conn.execute(
-            """
-            SELECT
-                timestamp,
-                cluster_load,
-                cpu_load_allocnodes_mean,
-                n_jobs_running,
-                n_jobs_pending,
-                n_nodes_down,
-                n_nodes_idle,
-                n_nodes_alloc
-            FROM metrics
-            ORDER BY timestamp
-            """
-        ).fetchall()
-
     # health metrics for compact right-side panel
     queue_pressure = (
         float(n_jobs_pending) / n_jobs_running if n_jobs_running else math.inf
@@ -385,13 +311,6 @@ def periodic_slurm_status(nosave=False):
     else:
         top_user, top_user_cores = ("n/a", 0.0)
 
-    one_hour_ago = int(stats["req_time"]) - 3600
-    load_1h_ago = None
-    for row in reversed(rows):
-        if row[0] <= one_hour_ago:
-            load_1h_ago = float(row[1])
-            break
-    load_delta_1h = cluster_load - load_1h_ago if load_1h_ago is not None else None
 
     # group nodes into fixed columns (topology is not available on this cluster)
     nodeGroups = _build_node_groups(nodesInPart, n_groups=6)
@@ -553,16 +472,11 @@ def periodic_slurm_status(nosave=False):
         queue_pressure_str = "inf"
     else:
         queue_pressure_str = f"{queue_pressure:.2f}"
-    if load_delta_1h is None:
-        load_delta_1h_str = "n/a"
-    else:
-        load_delta_1h_str = f"{load_delta_1h:+.1f} pp"
     health_lines = [
         "Health Panel (quick guide)",
         f"queue pressure (pending/running): {queue_pressure_str}",
         f"p90 wait (90% start sooner): {p90_wait_str}",
         f"top user by running cores: {top_user} ({int(top_user_cores)})",
-        f"1h load change (percentage points): {load_delta_1h_str}",
     ]
     healthText = "\n".join(health_lines)
     headerBox = dict(facecolor="white", alpha=0.75, edgecolor="none", pad=2.0)
@@ -600,7 +514,7 @@ def periodic_slurm_status(nosave=False):
     )
     ax.annotate(
         healthText,
-        [0.8, 0.925],
+        [0.8, 0.88],
         xycoords="figure fraction",
         fontsize=12.0,
         horizontalalignment="left",

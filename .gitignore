@@ -1,0 +1,9 @@
+pyslurm-*
+.idea
+.ipynb_checkpoints
+__pycache__/
+.ruff_cache/
+logs/
+caslake_stat_1.png
+historical.sqlite
+.cache/
